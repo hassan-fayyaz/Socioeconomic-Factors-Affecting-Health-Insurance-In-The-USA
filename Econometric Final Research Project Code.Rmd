@@ -1,0 +1,666 @@
+---
+title: "Econometrics Final Project Research"
+author: "Hassan Fayyaz"
+date: "12/19/2021"
+output: html_document
+---
+
+
+#Topic: Socioeconomic Factors Affecting Health Insurance In The USA
+
+#Group Members: Hassan Fayyaz | Thakur Prasad Ghimire | Adelia Fida
+
+#Professor Kevin Foster
+
+#Statistics and Introduction to Econometrics (B2000)
+
+#The City College of New York
+
+#Introduction:
+
+This research study involves data set of individuals
+who have health insurance and those without health insurance. 
+Some critical variables of the data set are age, gender, 
+marital status, race, education, and household income. 
+This research study aims to analyze the impact of these variables
+and predict the likelihood of someone having health insurance 
+based on the variables. 
+
+
+
+```{r}
+
+#Cleaning the environment
+rm(list = ls(all = TRUE))
+
+require("ipumsr")
+
+#setting the directory
+setwd("C:/Users/hassa/Desktop/Econometrics_Data")
+
+ddi <- read_ipums_ddi("nhis_00002.xml")
+
+data <- read_ipums_micro(ddi)
+
+```
+
+#######################
+
+# Loading Packages
+
+#######################
+
+```{r}
+install.packages("tidyverse", dependencies = TRUE)
+```
+
+```{r}
+install.packages("randomForest")
+```
+
+```{r}
+install.packages("corrplot")
+```
+
+```{r}
+install.packages("haven")
+```
+
+```{r}
+install.packages("gridExtra")
+```
+
+```{r}
+install.packages("Boruta")
+```
+
+
+```{r}
+
+library(ggplot2)
+library(stats)
+library(dplyr)
+library(randomForest)
+library(corrplot)
+library(haven)
+library(AER)
+library(foreign)
+library(nnet)
+library(reshape2)
+library(tidyverse)
+library(stargazer)
+library(ggeffects)
+library(gridExtra)
+
+```
+
+#######################
+
+# Viewing Data
+
+#######################
+
+```{r}
+
+str(data)
+
+View(data)
+
+summary(data)
+
+colnames(data)
+
+nrow(data)
+
+```
+
+#######################################################
+
+#Cleaning Data Set
+
+#######################################################
+
+```{r}
+
+data$REGION <- as.factor(data$REGION)
+levels(data$REGION) <- c("Northeast","Midwest","South","West")
+
+data$SEX <- as.factor(data$SEX)
+levels(data$SEX) <- c("Male","Female","Refused","dont know")
+
+data$SEXORIEN <- as.factor(data$SEXORIEN)
+levels(data$SEXORIEN) <- c("NIU","Lesbian or gay","straight","bisexual","something else","dont know","refused","NA")
+
+data$MARST <- as.factor(data$MARST)
+levels(data$MARST) <- c("NIU","Married","Married spouse not there","Married spouse NA","Widowed","Divorced","Separated","never married","unknown")
+
+data$RACEA <- as.factor(data$RACEA)
+levels(data$RACEA) <- c("white","Black","Aleut Alaskan","American Indian","Asian","Other","refused","not ascertained","unknown")
+
+data$HISPETH <- as.factor(data$HISPETH)
+levels(data$HISPETH) <- c("Not Hispanic","Mexican","Other Hispanic","NA")
+
+data$YRSINUS <- as.factor(data$YRSINUS)
+levels(data$YRSINUS) <- c("NIU","Less than 1 year in US","1-5 years in US","5-10 years in US","10-15 yr in US","15 or more yr in US","NA")
+
+data$CITIZEN <- as.factor(data$CITIZEN)
+levels(data$CITIZEN) <- c("No not US citizen","yes US citizen","refused","NA","dont know")
+
+data$ARMFEV <- as.factor(data$ARMFEV)
+levels(data$ARMFEV) <- c("NIU","No never active duty","active only for training","yes ever served in armed forces","refused","NA","dont know")
+
+data$EDUC <- as.factor(data$EDUC)
+levels(data$EDUC) <- c("NIU","no school","less than hs","12th grade no diploma","HS diploma","GED","some college","assoc deg in tech or occ","assoc deg academic","bachelors","masters","professional degree","doctoral","refused","dont know")
+
+data$EMPSTAT <- as.factor(data$EMPSTAT)
+levels(data$EMPSTAT) <- c("NIU","Employed","not employed","dont know")
+
+data$EMPHI <- as.factor(data$EMPHI)
+levels(data$EMPHI) <- c("NIU","no workplace did not offer health insurance","yes workplace offer health insurance","refused","NA","dont know")
+
+data$EMPFT <- as.factor(data$EMPFT)
+levels(data$EMPFT) <- c("NIU","parttime","fulltime","refused","NA","dont know")
+
+data$HEALTH <- as.factor(data$HEALTH)
+levels(data$HEALTH) <- c("excellent","very good","good","fair","poor","refused","dont know")
+
+
+is.na(data$HOURSWRK) <- which(data$HOURSWRK > 95)  # hours of work each week
+is.na(data$HEIGHT) <- which(data$HEIGHT > 94)  # height in inches
+is.na(data$WEIGHT) <- which(data$WEIGHT > 900)  # weight in pounds
+is.na(data$BMICALC) <- which(data$BMICALC > 900)  # BMI Body Mass Index
+
+data$HINOTCOVE <- as.factor(data$HINOTCOVE)
+levels(data$HINOTCOVE) <- c("has health insurance coverage","no health insurance coverage","dont know")
+
+data$EMPSTAT<-as.factor(data$EMPSTAT)
+levels(data$EMPSTAT)<-c("not employed","employed","dont know","NIU")
+
+```
+
+#Data cleaning
+```{r}
+library(dplyr)
+
+mydata= select(data,-c("YEAR","SERIAL","STRATA","PSU","NHISHID","NHISPID","HHX"))
+```
+
+#Inspect the data and check for missing values
+```{r}
+#NA count of all
+table(is.na(mydata))
+
+#NA count Column wise
+sapply(mydata, function(x) sum(is.na(mydata)))
+
+#NA count Row wise
+rowSums(is.na(mydata))
+
+sum(is.na(mydata))
+mydata= na.omit(mydata)#remove all missing values
+```
+
+######################################
+
+ 'Exploratory Data Analysis'
+
+######################################
+
+If the calculated value is greater than the critical value, 
+then we need to reject the null hypothesis & if the computed 
+value is less than the critical value, then we fail to reject 
+the null hypothesis
+
+
+```{r}
+
+library(sjPlot)
+
+```
+
+######################################
+# Health insurance by Race/ethnicity
+######################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row=mydata$RACEA, 
+                 var.col =mydata$HINOTCOVE,
+                 title = "Table Health insuracne by RACE",
+                 show.row.prc = TRUE)
+
+
+sjPlot::plot_xtab(mydata$RACEA, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+######################################
+# Health insurance by sex
+######################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row=mydata$SEX, 
+                 var.col =mydata$HINOTCOVE,
+                 title = "Table Health insuracne by sex",
+                 show.row.prc = TRUE,drop.empty = TRUE)
+
+sjPlot::plot_xtab(mydata$HINOTCOVE, mydata$SEX,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+#######################################
+# Health insurance by marital status
+#######################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row=mydata$MARST, 
+                 var.col =mydata$HINOTCOVE,
+                 title = "Table Health insuracne by marital status",
+                 show.row.prc = TRUE,drop.empty = TRUE)
+
+sjPlot::plot_xtab(mydata$MARST, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+########################################
+# Health Insurance by Citizenship status
+########################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$CITIZEN, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insuracne by citizenship status",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$CITIZEN, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+```
+
+########################################
+# Health Insurance by Sexual Orientation
+########################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$SEXORIEN, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insuracne by sex orientation",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$SEXORIEN, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+```
+
+###############################################################
+# Health Insurance by whether one served in the US Military 
+###############################################################
+
+```{r}
+sjPlot::tab_xtab(var.row = mydata$ARMFEV, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insuracne by whether one served in the army",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$ARMFEV, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+table(mydata$ASTATFLG)
+
+```
+
+##########################################################
+# Health Insurance by years lived in the United states
+##########################################################
+
+```{r}
+sjPlot::tab_xtab(var.row = mydata$YRSINUS, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insuracne by years lived in the united states",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$SEXORIEN, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+############################################
+# Health Insurance by education status
+############################################
+
+```{r}
+sjPlot::tab_xtab(var.row = mydata$EDUC, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insuracne by education status",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$EDUC, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+```
+
+#############################################
+# Health insurance by employment status
+#############################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$EMPSTAT, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insuracne by employement status",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$EMPSTAT, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+##################################################
+# Health insurance by US born citizenship status 
+##################################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$USBORN, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insurance by US born status",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$USBORN, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+```
+
+################################################################
+# Health insurance by whether workplace offer health insurance 
+################################################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$EMPHI, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insurance by whether employer offer health insurance",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$EMPHI, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+############################################
+# Health insurance by health status
+############################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$HEALTH, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insurance by health status",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$HEALTH, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+###############################################
+# Health insurance by medicaid status
+###############################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$HIMCAIDE, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insurance by whether one has medicaid",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$HIMCAIDE, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+#################################################
+# Health insurance by medicare status
+#################################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = mydata$HIMCAREE, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Table Health insurance by whether one has medicare",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(mydata$HIMCAREE, mydata$HINOTCOVE,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+########################################
+# Health insurance by Age group
+########################################
+
+```{r}
+
+sjPlot::tab_xtab(var.row = data$YRSINUS, 
+                 var.col = data$HINOTCOVE,
+                 title = "Table Health insuracne by age group",
+                 show.row.prc = TRUE)
+
+sjPlot::plot_xtab(data$HINOTCOVE, data$YRSINUS,
+                  margin = "row",
+                  bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+#######################################
+
+# LOGISTIC REGRESSION
+
+#######################################
+
+# Logistic Regression
+
+# The dependent variable health insurance "HINOTCOVE" has 3 levels, thus will be recoded 
+# to include 2 levels in order to fit a logistic regression model
+
+
+```{r}
+mydata$H_insurance = ifelse(mydata$HINOTCOVE == "has health insurance coverage","has  insurance coverage","no insurance") #drop the - HINOTCOVE
+colnames(mydata)
+```
+#Lets inspect our variable and change it to a factor
+
+```{r}
+
+table(mydata$H_insurance)
+class(mydata$H_insurance)
+mydata$H_insurance = as.factor(mydata$H_insurance)
+```
+
+# Drop irrelevant variables
+```{r}
+mydata = mydata[,-c(1:9)]
+
+dim(mydata) #this is a very big dataset with 31176 rows and 45 columns
+```
+# NOTE: We will use a small sample for the modelling to utilize the small PC RAM 
+# Sample 10% of the data
+
+```{r}
+sample_size = floor(0.01*nrow(mydata))
+set.seed(777)
+picked = sample(seq_len(nrow(mydata)),size = sample_size)
+mydata_sample =mydata[picked,]
+dim(mydata_sample)
+```
+
+# Feature selection using BORUTA PACKAGE
+```{r}
+library(Boruta)
+set.seed(123)
+boruta.train <- Boruta(H_insurance~. ,data = mydata_sample, doTrace = 2)
+print(boruta.train)
+```
+
+```{r}
+plot(boruta.train, xlab = "", xaxt = "n")
+lz<-lapply(1:ncol(boruta.train$ImpHistory),function(i)
+    boruta.train$ImpHistory[is.finite(boruta.train$ImpHistory[,i]),i])
+names(lz) <- colnames(boruta.train$ImpHistory)
+Labels <- sort(sapply(lz,median))
+axis(side = 1,las=2,labels = names(Labels),
+     at = 1:ncol(boruta.train$ImpHistory), cex.axis = 0.7)
+```
+
+```{r}
+final.boruta <- TentativeRoughFix(boruta.train)
+print(final.boruta)
+```
+
+```{r}
+boruta.df <- attStats(final.boruta)
+head(boruta.df)
+
+features=getSelectedAttributes(final.boruta, withTentative = F)
+features
+```
+
+```{r}
+final.features=c("bhr","basedp","pkhr","X.mphr.b.","sbp","dp","maxhr","mbp",
+                 "dpmaxdo","age","gddpeakdp")
+my.features=mydata_sample[,features]
+```
+
+
+
+
+# Re-introduce the y class variable
+
+```{r}
+
+my.features$H_insurance = mydata_sample$H_insurance
+
+```
+
+###########################################
+
+ Now lets fit a logistic regression model
+ 
+###########################################
+
+```{r}
+
+mymodel =glm(H_insurance ~ .,data=my.features,family = "binomial")
+summary(mymodel)
+```
+
+
+
+# Now lets fit a logistic regression model
+
+```{r}
+
+mymodel = glm(H_insurance ~.
+     ,data=my.features,family = "binomial")
+
+summary(mymodel)
+
+```
+
+# Odds ratios
+```{r}
+exp(mymodel$coefficients[c(3,29,69,70,72:76)])
+```
+
+# Print the model
+
+```{r}
+print(mymodel)
+```
+# Odds ratios
+
+
+```{r}
+exp(mymodel$coefficients[c(3,29,69,70,72:76)])
+# Print the model
+tab_model(mymodel)
+
+```
+#########################################
+
+# Multinomial Logistic Regression
+
+#########################################
+
+```{r}
+install.packages("packagename")
+```
+
+```{r}
+require(foreign)
+require(nnet)
+require(ggplot2)
+require(reshape2)
+```
+
+```{r}
+data$HINOTCOVE <- relevel(factor(data$HINOTCOVE), ref = "has health insurance coverage")
+test <- multinom(data$HINOTCOVE ~ data$RACEA + data$YRSINUS +
+                   data$SEX + data$MARST + data$EDUC)
+
+```
+
+```{r}
+exp(mymodel$coefficients[c(3,29,69,70,72:76)])
+```
+
+```{r}
+model = summary(test)
+z <- summary(test)$coefficients/summary(test)$standard.errors
+z
+```
+
+```{r}
+exp(coef(test))
+```
+```{r}
+head(pp <- fitted(test))
+```
+
+```{r}
+dses <- data.frame(insurance = c("has health insurance coverage","Employed"),
+                   write = mean(mydata$write))
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+
+```{r cars}
+summary(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

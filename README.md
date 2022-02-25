@@ -3,4 +3,5 @@ This research aims to determine the socioeconomic factors affecting the health i
 
 
 
-![HHHH](https://user-images.githubusercontent.com/52173060/155669407-1b13babc-fcc9-4a75-ab44-5e374ade7449.jpg)
+
+![healthcare economics](https://user-images.githubusercontent.com/52173060/155670053-984902b6-a212-4274-b6d9-d6fde624fbfa.jpg)

@@ -1,18 +1,16 @@
 ---
-title: "Econometrics Final Project Research"
+title: "Empirical Research Final Project"
 author: "Hassan Fayyaz"
-date: "12/19/2021"
+date: "05/24/2022"
 output: html_document
 ---
 
 
-#Topic: Socioeconomic Factors Affecting Health Insurance In The USA
-
-#Group Members: Hassan Fayyaz | Thakur Prasad Ghimire | Adelia Fida
+#Topic: Socioeconomic Factors Affecting Health Insurance In The United States
 
 #Professor Kevin Foster
 
-#Statistics and Introduction to Econometrics (B2000)
+#Foundations of Empirical Research (ECO B2100)
 
 #The City College of New York
 
@@ -91,6 +89,18 @@ library(tidyverse)
 library(stargazer)
 library(ggeffects)
 library(gridExtra)
+library(readr)
+library(readxl)
+library(janitor)
+library(skimr)
+library(plotly)
+library(tidyr)
+library(lubridate)
+library(rmarkdown)
+library(flexdashboard)
+library(DT)
+library(ggforce)
+library(tinytex)
 
 ```
 
@@ -219,254 +229,273 @@ library(sjPlot)
 ```
 
 ######################################
-# Health insurance by Race/ethnicity
+#1 Health Insurance By Race
 ######################################
 
-```{r}
-
+```{r Table#1}
 sjPlot::tab_xtab(var.row=mydata$RACEA, 
                  var.col =mydata$HINOTCOVE,
-                 title = "Table Health insuracne by RACE",
+                 title = "Health Insurance By Race",
                  show.row.prc = TRUE)
+```
 
-
-sjPlot::plot_xtab(mydata$RACEA, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
+```{r Chart#1}
+ggplot(mydata,
+      aes(x= RACEA, y=HINOTCOVE)) +
+  geom_bar(stat = "identity", width=0.5, color="Green") + labs(x = "Race", y = "Health Insurance Status")+
+  geom_line(color = "firebrick", linetype = "dotted", size = .3) +
+  ggtitle("Health Insurance By Race")
 ```
 
 ######################################
-# Health insurance by sex
+#2 Health Insurance By Sex
 ######################################
 
-```{r}
+```{r Table#2}
 
 sjPlot::tab_xtab(var.row=mydata$SEX, 
                  var.col =mydata$HINOTCOVE,
-                 title = "Table Health insuracne by sex",
+                 title = "Health Insurance By Sex",
                  show.row.prc = TRUE,drop.empty = TRUE)
+```
 
-sjPlot::plot_xtab(mydata$HINOTCOVE, mydata$SEX,
-                  margin = "row",
+```{r Chart#2}
+sjPlot::plot_xtab(mydata$HINOTCOVE, mydata$SEX, type = c("bar", "line"),
+                  margin = "row",  title = "Health Insurance By Sex",
                   bar.pos = "stack", coord.flip = TRUE)
 
 ```
 
 #######################################
-# Health insurance by marital status
+#3 Health Insurance By Citizenship Status
 #######################################
 
-```{r}
-
-sjPlot::tab_xtab(var.row=mydata$MARST, 
-                 var.col =mydata$HINOTCOVE,
-                 title = "Table Health insuracne by marital status",
-                 show.row.prc = TRUE,drop.empty = TRUE)
-
-sjPlot::plot_xtab(mydata$MARST, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
-```
-
-########################################
-# Health Insurance by Citizenship status
-########################################
-
-```{r}
+```{r Table#3}
 
 sjPlot::tab_xtab(var.row = mydata$CITIZEN, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insuracne by citizenship status",
+                 title = "Health Insurance By Citizenship Status",
                  show.row.prc = TRUE)
+```
 
-sjPlot::plot_xtab(mydata$CITIZEN, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
+```{r Chart#3}
+ggplot(mydata,
+      aes(x= CITIZEN, y=HINOTCOVE)) +
+  geom_point(color = "firebrick", shape = "diamond", size = 2)+ labs(x = "Citizen", y = "Health Insurance Status")+
+  geom_line(color = "firebrick", linetype = "dotted", size = .3) +
+  ggtitle("Health Insurance by Citzenship")
 ```
 
 ########################################
-# Health Insurance by Sexual Orientation
+#4 Health Insurance By Sexual Orientation
 ########################################
 
-```{r}
+```{r Table#4}
 
 sjPlot::tab_xtab(var.row = mydata$SEXORIEN, 
                  var.col = mydata$HINOTCOVE,
                  title = "Table Health insuracne by sex orientation",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$SEXORIEN, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
 ```
 
-###############################################################
-# Health Insurance by whether one served in the US Military 
-###############################################################
+```{r Chart#4}
+ggplot(mydata, aes(x=SEXORIEN, y=HINOTCOVE)) + 
+  geom_bar(stat = "identity", width=0.5, color="Purple") + labs(x = "Sexual Orientation", y = "Health Insurance Status")+
+  geom_line(color = "firebrick", linetype = "dotted", size = .3) +
+  ggtitle("Health Insurance By Sexual Orientation")
+```
 
-```{r}
+########################################
+#5 Health Insurance Based On US Military Service
+########################################
+
+```{r Table#5}
 sjPlot::tab_xtab(var.row = mydata$ARMFEV, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insuracne by whether one served in the army",
+                 title = "Health Insurance Based On US Military Service",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$ARMFEV, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
-table(mydata$ASTATFLG)
-
 ```
 
-##########################################################
-# Health Insurance by years lived in the United states
-##########################################################
+```{r Chart#5}
+ggplot(mydata, aes(x=ARMFEV, y=HINOTCOVE)) + 
+  geom_bar(stat = "identity", width=0.5, color="Pink") + labs(x = "Military Service", y = "Health Insurance Status")+
+  geom_line(linetype = "dotted", size = .3) +
+  ggtitle("Health Insurance Based On US Military Service")
+```
 
-```{r}
+###############################################################
+#6 Health Insurance By Years Lived In The United States
+###############################################################
+
+```{r Table#6}
 sjPlot::tab_xtab(var.row = mydata$YRSINUS, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insuracne by years lived in the united states",
+                 title = "Health Insurance By Years Lived In The United States",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$SEXORIEN, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
 ```
 
-############################################
-# Health Insurance by education status
-############################################
-
-```{r}
-sjPlot::tab_xtab(var.row = mydata$EDUC, 
-                 var.col = mydata$HINOTCOVE,
-                 title = "Table Health insuracne by education status",
-                 show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$EDUC, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
+```{r Chart#6}
+ggplot(mydata, aes(fill=HINOTCOVE, y=YRSINUS, x=HINOTCOVE)) + 
+  geom_bar(position="dodge", stat="identity") + labs(x = "Health Insurance Status", y = "Years Lived In The United States") +
+  ggtitle("Health insurance by RACE")
 ```
 
-#############################################
-# Health insurance by employment status
-#############################################
+##########################################################
+#7 Health Insurance By Employment Status
+##########################################################
 
-```{r}
+```{r Table#7}
 
 sjPlot::tab_xtab(var.row = mydata$EMPSTAT, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insuracne by employement status",
+                 title = "Health Insurance By Employment Status",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$EMPSTAT, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
 ```
 
-##################################################
-# Health insurance by US born citizenship status 
-##################################################
+```{r Chart#7}
+ggplot(aes(x= EMPSTAT, 
+           y= HINOTCOVE, 
+           color=EMPSTAT), data = mydata)+
+  geom_point()+
+  geom_smooth(method="lm", se=FALSE) + 
+  facet_wrap(~EMPSTAT + HINOTCOVE) +
+  ggtitle("Health Insurance By Employment Status")
+```
 
-```{r}
+############################################
+#8 Health Insurance By US Born Citizenship Status 
+############################################
+
+```{r Table#8}
 
 sjPlot::tab_xtab(var.row = mydata$USBORN, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insurance by US born status",
+                 title = "Health Insurance By US Born Citizenship Status",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$USBORN, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
 ```
 
-################################################################
-# Health insurance by whether workplace offer health insurance 
-################################################################
+```{r Chart#8}
+ggplot(mydata,
+       aes(x= USBORN, y =HINOTCOVE)) +
+  geom_point(color = "firebrick", shape = "diamond", size = 2)+
+  ggtitle("Health Insurance By US Born Citizenship Status")+
+  xlab("USBORN")+
+  ylab("HINOTCOVE")
+```
 
-```{r}
+#############################################
+#9 Health Insurance By Whether Workplace Offers Health Insurance 
+#############################################
+
+```{r Table#9}
 
 sjPlot::tab_xtab(var.row = mydata$EMPHI, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insurance by whether employer offer health insurance",
+                 title = "Health Insurance By Whether Workplace Offers Health Insurance",
                  show.row.prc = TRUE)
+```
 
-sjPlot::plot_xtab(mydata$EMPHI, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
+```{r Chart#9}
+ggplot(aes(x= EMPHI, y=HINOTCOVE), data=mydata)+ geom_point()+
+  facet_grid(HINOTCOVE ~ EMPHI) +
+  xlab("Workplace Offers Health Insurance") + 
+  ylab("Health Insurance Status")
 
 ```
 
-############################################
-# Health insurance by health status
-############################################
+##################################################
+#10 Health Insurance By Health Status 
+##################################################
 
-```{r}
+```{r Table#10}
 
 sjPlot::tab_xtab(var.row = mydata$HEALTH, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insurance by health status",
+                 title = "Health Insurance By Health Status",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$HEALTH, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
 ```
 
-###############################################
-# Health insurance by medicaid status
-###############################################
+```{r Chart#10}
+ggplot(mydata, aes(x=HEALTH, y=HINOTCOVE)) + 
+  geom_bar(stat = "identity", width=0.2, color="Black")+
+  xlab("Health Condition") + 
+  ylab("Health Insurance Status")+
+  ggtitle("Health Insurance By Health Status")
+```
 
-```{r}
+################################################################
+#11 Health Insurance By Medicaid Status
+################################################################
 
+```{r Table#11}
 sjPlot::tab_xtab(var.row = mydata$HIMCAIDE, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insurance by whether one has medicaid",
+                 title = "Health Insurance By Medicaid Status",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$HIMCAIDE, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
 ```
 
-#################################################
-# Health insurance by medicare status
-#################################################
+```{r Chart#11}
+ggplot(mydata,
+       aes(x= HIMCAIDE, y= HINOTCOVE)) + geom_point(color= "Black", alpha = 2) + labs(x = "Medicaid Status", y = "Health Insurance Status") + 
+  
+stat_smooth() +
+theme(panel.grid.major = element_line(size = .1, linetype = "dashed"),
+        panel.grid.minor = element_line(size = .2, linetype = "dotted"),
+        panel.grid.major.x = element_line(color = "red1"),
+        panel.grid.major.y = element_line(color = "blue1"),
+        panel.grid.minor.x = element_line(color = "red4"),
+        panel.grid.minor.y = element_line(color = "blue4"))+
+  ggtitle("Health Insurance By Medicaid Status") 
+  
+  xlab("")
+```
 
-```{r}
+############################################
+#12 Health Insurance By Medicare Status
+############################################
+
+```{r Table#12}
 
 sjPlot::tab_xtab(var.row = mydata$HIMCAREE, 
                  var.col = mydata$HINOTCOVE,
-                 title = "Table Health insurance by whether one has medicare",
+                 title = "Health Insurance By Medicare Status",
                  show.row.prc = TRUE)
-
-sjPlot::plot_xtab(mydata$HIMCAREE, mydata$HINOTCOVE,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
 ```
 
-########################################
-# Health insurance by Age group
-########################################
+```{r Chart#12}
+ggplot(mydata,
+       aes(x= HIMCAREE, y= HINOTCOVE)) + geom_point() + labs(x = "Medicare Status", y = "Health Insurance Status")+
+  geom_violin(draw_quantiles   = c(.25, .5, .75))+
+  geom_jitter(aes(y= HINOTCOVE,
+                  x= HIMCAREE),
+              color="Purple",
+              height = 0,
+              width=0.5, alpha=100)+
+  
+ggtitle("Health Insurance By Medicare Status")
+xlab("")
+```
 
-```{r}
+###############################################
+#13 Health Insurance By Years Lived In The United States
+###############################################
 
-sjPlot::tab_xtab(var.row = data$YRSINUS, 
-                 var.col = data$HINOTCOVE,
-                 title = "Table Health insuracne by age group",
+```{r Table#13}
+
+sjPlot::tab_xtab(var.row = mydata$YRSINUS, 
+                 var.col = mydata$HINOTCOVE,
+                 title = "Health Insurance By Years Lived In The United States",
                  show.row.prc = TRUE)
+```
 
-sjPlot::plot_xtab(data$HINOTCOVE, data$YRSINUS,
-                  margin = "row",
-                  bar.pos = "stack", coord.flip = TRUE)
-
+```{r Chart#13}
+ggplot(aes(x= YRSINUS, 
+           y= HINOTCOVE, 
+           color=YRSINUS), data = mydata)+
+  geom_point()+
+  geom_smooth(method="lm", se=FALSE) + 
+  facet_wrap(~YRSINUS + HINOTCOVE) +
+  ggtitle("Health Insurance by Years lived in the United States")
 ```
 
 #######################################

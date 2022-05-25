@@ -1,6 +1,6 @@
 ---
 title: "Empirical Research Final Project"
-author: "Hassan Fayyaz"
+authors: "Hassan Fayyaz | Adeel Arshid | Tanmay Thomas "
 date: "05/24/2022"
 output: html_document
 ---

@@ -34,7 +34,7 @@ rm(list = ls(all = TRUE))
 require("ipumsr")
 
 #setting the directory
-setwd("C:/Users/hassa/Desktop/Econometrics_Data")
+setwd("C:/Users/hassa/Desktop/Empirical_Data")
 
 ddi <- read_ipums_ddi("nhis_00002.xml")
 

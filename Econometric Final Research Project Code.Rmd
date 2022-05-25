@@ -8,7 +8,7 @@ output: html_document
 
 #Topic: Socioeconomic Factors Affecting Health Insurance In The United States
 
-#Professor Kevin Foster
+#Professor John Schmitz
 
 #Foundations of Empirical Research (ECO B2100)
 
